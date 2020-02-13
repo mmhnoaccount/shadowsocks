@@ -1,0 +1,44 @@
+//!bin/bash
+
+echo shadowsocks installing...
+
+yum update
+yum upgrade
+
+yum install python3-pip
+
+pip3 install https://github.com/shadowsocks/shadowsocks/achive/master.zip
+
+CONFIG_FILE=/etc/shadowsocks/shadowsocks.json
+SS_PASSWORD=074185
+SS_PORT=2345
+SS_METHOD=aes-256-cfb
+SS_IP=`ip route get 1 | awk '{print $NF;exit}'`
+
+cat <<EOF | sudo tee ${CONFIG_FILE}
+{
+  "server": "0.0.0.0",
+  "server_port": ${SS_PORT},
+  "password": "${SS_PASSWORD}",
+  "timeout":300,
+  "method": "${SS_METHOD}"
+}
+EOF
+
+systemctl stop firewalld.service
+
+ssserver -c /etc/shadowsocks/config.json -d start
+
+sleep 5
+systemctl status shadowsocks -l
+
+echo "================================"
+echo ""
+echo "Congratulations! Shadowsocks has been installed on your system."
+echo "You shadowsocks connection info:"
+echo "--------------------------------"
+echo "server:      ${SS_IP}"
+echo "server_port: ${SS_PORT}"
+echo "password:    ${SS_PASSWORD}"
+echo "method:      ${SS_METHOD}"
+echo "--------------------------------"
